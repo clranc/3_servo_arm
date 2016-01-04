@@ -1,0 +1,20 @@
+3_servo_arm    
+
+    This is an AVR-C project that permits the user control of a claw arm 
+operated by multiple DC servos through analog and digital input for the 
+atmega328p.  The servos managing left, right, up, and down motion are controlled
+via an analog stick while the claw is changed from being opened and closed via
+pressing a button. 
+
+    The project also provides an analog input module named analogIn.h.  Holding 
+a few routines for turning on the atmega328p's Analog to Digital Converter(ADC), 
+telling when to convert the analog input, and to change which analog input pin 
+will be using the ADC.  These respectively being:
+
+    void setupADC()
+
+    void startConv()
+
+    void changeInputPin(uint8_t pin);
+
+

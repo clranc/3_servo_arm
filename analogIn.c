@@ -6,7 +6,7 @@
 #include <avr/io.h>
 #include "analogIn.h"
 
-Initalizes ADCSRA Register 
+ 
 void startConv(){
 
         /* Sets ADSC bit to begin conversion */
