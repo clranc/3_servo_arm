@@ -12,7 +12,7 @@
 #include "analogIn.h"
 
 /*  Define to convert digital voltage value to be within the amount of clock 
- *  ticks for the duty cycle time to be within 0 and 3 ms
+ *  ticks for the duty cycle time to be within 0 and 2.5 ms
  */
 #define servoConvert(x) ((x / 1024.0) * 39)
 
