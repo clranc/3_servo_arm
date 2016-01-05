@@ -11,22 +11,33 @@
 #include <util/delay.h>
 #include "analogIn.h"
 
-/*  Define to convert digital voltage value to be within the amount of clock 
- *  ticks for the duty cycle time to be within 0 and 2.5 ms
+/*  Tick values for max and min servo positions found using a prescale value of
+ *  1024.  
  */
-#define servoConvert(x) ((x / 1024.0) * 39)
-
-
+/*  Max position at a duty cycle of 2.5 ms */
 #define SERVOMAX 39
-#define SERVOMIN 0
+/*  Min position at a duty cycle of about .5 ms */
+#define SERVOMIN 7
 
-/*  Close */
-#define CLAW_SERVOMAX 32
-/*  Open */
-#define CLAW_SERVOMIN 21
+/*  Claw servo tick values were found using a prescale of 256*/
+/*  Close at a duty cycle of about 2 ms*/
+#define CLAW_SERVOMAX 128
+/*  Open  at a duty cycle of about 1.3 ms*/
+#define CLAW_SERVOMIN 84
+
+/* Values used to determine duty cycle factor*/ 
+#define POSITION_VAL_MAX 5000.0
+#define RATE_MAX 2.0
+
+/*  Determines new duty cycle to be between .5 and 2.5ms */
+#define servoConvert(x) (((x / POSITION_VAL_MAX) * (SERVOMAX - SERVOMIN)) + SERVOMIN)
+/*  Determines rate to increase or decrease duty cycle factor */
+#define servoRatePositiveConvert() (RATE_MAX * (ADC - 520.0) / 504.0)
+#define servoRateNegativeConvert() (RATE_MAX * (ADC - 510.0) / 510.0)
 
 uint8_t analogPin;
 int servoT0, servoT1, servoT2;
+float currentPositionT0, currentPositionT1;
 
 /*  Interrupt for ending first timer that controls the input for the first
  *  2 servos
@@ -46,12 +57,43 @@ ISR(TIMER1_OVF_vect){
 
 ISR(ADC_vect){
     switch(analogPin){
+        
+        /*  Set postion of servo attached to PD6 */
         case 0:
-            servoT0 = servoConvert(ADC);
+
+            /*  If ADC is above 520 then currentPositionT0 will be increased */
+            if (ADC > 520){
+                currentPositionT0 += servoRatePositiveConvert();
+                if (currentPositionT0 > POSITION_VAL_MAX)
+                    currentPositionT0 = POSITION_VAL_MAX;
+            }
+            /*  If ADC is below 510 then currentPositionT0 will be decremented */
+            else if (ADC < 510){
+                currentPositionT0 += servoRateNegativeConvert();
+                if (currentPositionT0 < 0)
+                    currentPositionT0 = 0;
+            }
+            
+            servoT0 = servoConvert(currentPositionT0); 
             analogPin++;
             break;
+
+        /*  Set postion of servo attached to PD5 */
         case 1:
-            servoT1 = servoConvert(ADC);
+            /*  If ADC is above 520 then currentPositionT1 will be increased */
+            if (ADC > 520){
+                currentPositionT1 += servoRatePositiveConvert();
+                if (currentPositionT1 > POSITION_VAL_MAX)
+                    currentPositionT1 = POSITION_VAL_MAX;
+            }
+            /*  If ADC is below 51 then currentPositionT1 will be decremented */
+            else if (ADC < 510){
+                currentPositionT1 += servoRateNegativeConvert();
+                if (currentPositionT1 < 0)
+                    currentPositionT1 = 0;
+            }
+ 
+            servoT1 = servoConvert(currentPositionT1);
             analogPin = 0;
             break;
         default :
@@ -68,7 +110,11 @@ ISR(ADC_vect){
 
 int main (){
 
+    /*  Initial Values */
     analogPin = 0;
+    currentPositionT0 = POSITION_VAL_MAX / 2;
+    currentPositionT1 = currentPositionT0;
+    servoT2 = CLAW_SERVOMAX;
     
     /*  Sets pin PD6 and PD5 for output. Respectively known as pins 6 and 5 
      *  for the Arduino Uno.
@@ -99,14 +145,13 @@ int main (){
     /*  Enable interrupts*/
     sei();
 
-    /*  Set prescalers to increment the counters every 1024 cycles. */
+    /*  Set prescaler for TCNT0 to increment it every 1024 cycles. */
     TCCR0B |= _BV(CS00) | _BV(CS02);
-    TCCR1B |= _BV(CS10) | _BV(CS12);
-
-    /*  Set servos to starting position */
-    servoT0 = SERVOMAX / 2;
-    servoT1 = servoT0;
-    servoT2 = CLAW_SERVOMAX;
+    /*  Set prescaler for TCNT1 to increment it every 256 cycles.  This is to 
+     *  prevent the ISR's of both counters from interfering.  This would make
+     *  the servos jitter sporadically at certain positions otherwise.
+     */
+    TCCR1B |= _BV(CS12);
 
     while (1){
 
