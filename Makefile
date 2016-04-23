@@ -4,11 +4,11 @@
 # -------------------------------------------------------------------------
 CC = avr-gcc
 
-bl: 
-	@make analogIn.o
-	@make servoControl.o
-	@make servoControl
-	@make load
+bl: analogIn.o servoControl.o servoControl load
+#	@make analogIn.o
+#	@make servoControl.o
+#	@make servoControl
+#	@make load
 
 analogIn.o: analogIn.c analogIn.h
 	$(CC) -std=c99 -Os -DF_CPU=16000000UL -mmcu=atmega328p -c -o analogIn.o analogIn.c
