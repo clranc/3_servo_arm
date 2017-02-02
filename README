@@ -15,6 +15,6 @@ will be using the ADC.  These respectively being:
 
     void startConv()
 
-    void changeInputPin(uint8_t pin);
+    void changeInputPin(uint8_t pin)
 
 
