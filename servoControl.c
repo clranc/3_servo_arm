@@ -121,14 +121,14 @@ int main (){
      */
     DDRD |= _BV(DDD6) | _BV(DDD5);
 
-    /*  Sets pin PB3 for output.  Also known as pin 11 for the Arduino Uno */
+    /*  Sets pin PB1 for output.  Also known as pin 9 for the Arduino Uno */
     DDRB |= _BV(DDB1);
 
     /*  Configure PWM outputs to clear on a compare match and set wave form to 
      *  operate as Fast PWM for TCNT0 and TCNT1 counters.
      */
     TCCR0A |= _BV(COM0A1) | _BV(COM0B1) | _BV(WGM00) | _BV(WGM01);
-
+*
     TCCR1A |= _BV(COM1A1) | _BV(WGM10);
     /*  For the TCNT1 counter the second configuration register has to have the
      *  the WGM12 bit enabled to operate at Fast PWM mode wanted.  */
